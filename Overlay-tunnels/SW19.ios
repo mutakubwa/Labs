@@ -1,0 +1,87 @@
+en
+conf t
+hostname SW19
+banner motd #My Gre over IPSEC lab#
+spanning-tree mode rapid-pvst
+ip routing
+
+line console 0
+logging synchronous
+exec-timeout 0 0 
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout 0 0 
+privilege level 15
+password cisco123
+login 
+exit
+
+int range e0/0-3,e1/0-3,e2/0-3
+shut
+exit
+
+
+int e0/0 
+no switchport
+ip address 10.10.4.2 255.255.255.252
+no shut
+exit
+
+int e0/1
+no switchport
+ip address 10.10.5.1 255.255.255.252
+no shut
+exit
+
+
+
+int loopback 16
+ip address 10.10.16.1 255.255.255.0
+no shut
+exit
+
+int loopback 17
+ip address 10.10.17.1 255.255.255.0
+no shut
+exit
+
+int loopback 18
+ip address 10.10.18.1 255.255.255.0
+no shut
+exit
+
+int loopback 19
+ip address 10.10.19.1 255.255.255.0
+no shut
+exit
+
+int loopback 20
+ip address 10.10.20.1 255.255.255.0
+no shut
+exit
+
+int loopback 21
+ip address 10.10.21.1 255.255.255.0
+no shut
+exit
+
+int loopback 22
+ip address 10.10.22.1 255.255.255.0
+no shut
+exit
+
+int loopback 23
+ip address 10.10.23.1 255.255.255.0
+no shut
+exit
+
+router ospf 123
+router-id 19.19.19.4
+network 10.10.4.0 0.0.1.255 area 0
+network 10.10.16.0 0.0.7.255 area 0
+exit
+
+
+do copy run start

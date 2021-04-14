@@ -1,0 +1,37 @@
+en
+conf t
+hostname R7
+banner motd #My Gre over IPSEC lab#
+
+line console 0
+logging synchronous
+exec-timeout 0 0 
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout 0 0 
+privilege level 15
+password cisco123
+login 
+exit
+
+int e0/0 
+ip address 64.100.0.2 255.255.255.252
+no shut
+exit
+
+int e0/1
+ip address 10.10.0.1 255.255.255.252
+no shut
+exit
+
+router ospf 123
+router-id 7.7.7.4
+network 10.10.0.0 0.0.0.3 area 0
+default-information originate
+exit
+
+ip route 0.0.0.0 0.0.0.0 e0/0 64.100.0.1
+
+do copy run start 
