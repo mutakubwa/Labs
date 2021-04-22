@@ -44,6 +44,10 @@ ip address 10.10.3.1 255.255.255.0
 no shut
 exit
 
+int range loopback2-3
+ip ospf network point-to-point
+exit
+
 
 router ospf 123
 router-id 18.18.18.4
