@@ -1,0 +1,58 @@
+en 
+conf t 
+
+host R7
+
+banner motd #My snmp and syslog lab#
+
+ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+exit
+
+int e0/1
+ip address 192.168.1.1 255.255.255.0
+ipv6 address fe80::1:1 link-local
+ipv6 address 2001:db8:acad:1000::1/64
+no shut
+exit
+
+do clock set 16:15:00 23 APRIL 2021
+clock timezone EST -5
+
+ntp master 10
+
+ip access-list standard NMS-SERVER
+10 permit host 192.168.1.50
+exit
+
+snmp-server location D1 rack 1
+snmp-server contact student 555-1213
+snmp-server chassis-id Cisco Device D1
+
+snmp-server community ccnpv8 ro NMS-SERVER
+snmp-server community ccnpv8 rw NMS_SERVER
+
+snmp-server host 192.168.1.50 version 2c ccnpv8
+snmp-server ifindex persist
+snmp-server enable traps
+
+logging buffered 16384
+logging trap informational
+logging host 192.168.1.50
+
+
+do copy run start
+
+
+
