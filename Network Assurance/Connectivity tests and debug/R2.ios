@@ -1,0 +1,72 @@
+en 
+conf t 
+
+host R2
+banner motd  #my Network Assurance lab# 
+
+ipv6 unicast-routing 
+
+line con 0 
+logging synchronous
+exec-timeout 0 0 
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout 0 0 
+privilege level 15 
+password cisco123
+login 
+exit 
+
+int loopback 0 
+ip address 192.168.2.1 255.255.255.224 
+ipv6 address fe80::2:1 link-local
+ipv6 address 2001:db8:acad:2000::2/64
+no shut
+exit 
+
+int e0/0
+ip address 10.1.2.2 255.255.255.0
+ipv6 address fe80::2:2 link-local
+ipv6 address 2001:db8:acad:1012::2/64
+no shut
+exit
+
+int e0/1
+ip address 10.2.3.2 255.255.255.0
+ipv6 address fe80::2:3 link-local
+ipv6 address 2001:db8:acad:1023::2/64
+no shut
+exit
+
+router ospfv3 1
+router-id 2.2.2.2
+address-family ipv4 unicast 
+exit
+address-family ipv6 unicast 
+exit
+
+exit
+
+int loopback 0 
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+int e0/0 
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit 
+
+int e0/1 
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+int loopback 0
+ospfv3 1 network point-to-point
+exit
+
+
+do copy run start 
