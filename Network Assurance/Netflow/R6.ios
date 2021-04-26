@@ -1,0 +1,79 @@
+en
+conf t
+
+host R6
+
+banner motd #My Netflow lab#
+
+ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input telnet ssh
+exit
+
+int loopback 0
+ip address 10.0.0.1 255.255.255.0
+ipv6 address fe80::1:1 link-local
+ipv6 address 2001:db8:acad:10::1/64
+no shut
+exit
+
+int e0/3
+ip address 192.168.1.1 255.255.255.0
+ipv6 address fe80::1:2 link-local
+ipv6 address 2001:db8:acad:1000::1/64
+no shut
+exit
+
+do clock set 13:51:00 26 April 2021
+clock timezone EST -5
+ntp master 10
+
+! flow record section
+flow record CCNP8-record
+description custom flow record for outbond traffic
+match ipv4 destination address
+match transport destination-port
+collect counter bytes
+collect counter packets
+exit
+
+flow exporter CCNP8-collector
+description flow exporter
+destination 192.168.1.50
+export protocol netflow-vp
+transport udp 9999
+exit
+
+flow monitor CCNP8-inbound-monitor
+description monitor
+record netflow ipv4 original-input
+cache timeout active 30
+exporter CCNP8-collector
+exit
+
+flow monitor CCNP8-outbound-monitor
+description second outbound flow record
+record CCNP8-record
+cache timeout active 30
+exporter CCNP8-collector
+exit
+
+int e0/3
+ip flow monitor CCNP8-inbound-monitor  input
+ip flow monitor CCNP8-outbound-monitor output
+exit
+
+
+
+do copy run start

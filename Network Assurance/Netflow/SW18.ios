@@ -1,0 +1,59 @@
+en
+conf t
+
+host SW18
+
+banner motd #My Netflow lab#
+
+spanning-tree mode rapid-pvst
+
+no ip routing
+no ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input telnet ssh
+exit
+
+int range e0/0-3,e1/0-3,e2/0-3
+shut
+exit
+
+int vlan 1
+ip address 192.168.1.2 255.255.255.0
+ipv6 address fe80::2:1 link-local
+ipv6 address 2001:db8:acad:1000::2/64
+no shut
+exit
+
+int range e0/0-1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+channel-group 1 mode active
+no shut
+exit
+
+int e0/2
+switchport host
+no shut
+exit
+
+int e0/3
+no shut
+exit
+
+ntp server 192.168.1.1
+clock timezone EST -5
+
+ip default-gateway 192.168.1.1
+
+do copy run start
