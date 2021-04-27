@@ -1,0 +1,78 @@
+en
+conf t
+
+host SW25
+
+banner motd #My IP SLA Lab#
+
+spanning-tree mode rapid-pvst
+
+no ip routing
+no ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input telnet ssh
+exit
+
+int range e0/0-3,e1/0-3,e2/0-3
+shut
+exit
+
+vlan 2
+name secondVlan
+exit
+
+vlan 3
+name thirdVlan
+exit
+
+
+int range e1/2-3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+channel-group 2 mode active
+no shut
+exit
+
+int range e2/0-1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+channel-group 3 mode active
+no shut
+exit
+
+int e0/1
+switchport host
+switchport access vlan 2
+exit
+
+int e0/1
+switchport host
+switchport access vlan 3
+exit
+
+
+ntp server 172.16.23.8
+clock timezone EST -5
+
+interface vlan 2
+ip address 10.0.2.3 255.255.255.0
+ipv6 address fe80::25:3 link-local
+ipv6 address 2001:db8:acad:2::3/64
+no shut
+exit
+
+ip default-gateway 10.0.2.254
+
+do copy run start
+

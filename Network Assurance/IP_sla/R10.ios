@@ -1,0 +1,59 @@
+en
+conf t
+
+host R10
+
+banner motd #My IP SLA Lab#
+
+ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input telnet ssh
+exit
+
+int e0/0
+ip address 172.16.23.10 255.255.255.0
+ipv6 address fe80::10:2 link-local
+ipv6 address 2001:db8:acad:23::10/64
+no shut
+exit
+
+int e0/1
+ip address 172.16.3.10 255.255.255.0
+ipv6 address fe80::10:3 link-local
+ipv6 address 2001:db8:acad:1723::10/64
+no shut
+exit
+
+ntp server 172.16.23.8
+clock timezone EST -5
+
+router ospfv3 1
+router-id 10.10.10.10
+address-family ipv4 unicast
+exit
+address-family ipv6 unicast
+exit
+exit
+
+int e0/1
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+int e0/0
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+do copy run start

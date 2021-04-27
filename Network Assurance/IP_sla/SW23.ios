@@ -1,0 +1,148 @@
+en
+conf t
+
+host SW23
+
+banner motd #My IP SLA Lab#
+
+spanning-tree mode rapid-pvst
+
+ip routing
+ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input telnet ssh
+exit
+
+int range e0/0-3,e1/0-3,e2/0-3
+shut
+exit
+
+vlan 2
+name secondVlan
+exit
+
+vlan 3
+name thirdVlan
+exit
+
+int vlan 2
+ip address 10.0.2.1 255.255.255.0
+ipv6 address fe80::1:1 link-local
+ipv6 address 2001:db8:acad:2::1/64
+no shut
+exit
+
+int vlan 3
+ip address 10.0.3.1 255.255.255.0
+ipv6 address fe80::1:2 link-local
+ipv6 address 2001:db8:acad:3::1/64
+no shut
+exit
+
+
+int range e0/2-3, e1/0-1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+channel-group 1 mode active
+no shut
+exit
+
+int range e1/2-3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+channel-group 2 mode active
+no shut
+exit
+
+int e0/0
+no switchport
+ip address 172.16.1.23 255.255.255.0
+ipv6 address fe80::23:3 link-local
+ipv6 address 2001:db8:acad:1721::23/64
+no shut
+exit
+
+ntp server 172.16.12.8
+clock timezone EST -5
+
+router ospfv3 1
+router-id 23.23.23.23
+address-family ipv4 unicast
+exit
+address-family ipv6 unicast
+exit
+exit
+
+int e0/0
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+spanning-tree vlan 2 root primary
+spanning-tree vlan 3 root secondary
+
+interface vlan 2
+standby version 2
+standby 2 ip 10.0.2.254
+standby 2 priority 150
+standby 2 preempt
+standby 26 ipv6 autoconfig
+standby 26 priority 150
+standby 26 preempt
+exit
+
+interface vlan 3
+standby version 2
+standby 3 ip 10.0.3.254
+standby 3 preempt
+standby 3 priority 100
+standby 36 ipv6 autoconfig
+standby 36 priority 100
+standby 36 preempt
+exit
+
+router ospfv3 1
+passive-interface vlan 2
+passive-interface vlan 3
+exit
+
+ip dhcp excluded-address 10.0.2.1 10.0.2.5
+ip dhcp excluded-address 10.0.2.128 10.0.2.254
+ip dhcp pool vlan_2_pool
+network 10.0.2.0 255.255.255.0
+default-router 10.0.2.254
+exit
+
+ip dhcp excluded-address 10.0.3.1 10.0.3.5
+ip dhcp excluded-address 10.0.3.254
+ip dhcp pool vlan_3_pool
+network 10.0.3.0 255.255.255.0
+default-router 10.0.3.254
+exit
+
+ip sla 4
+icmp-echo 192.168.1.1
+frequency 15
+exit
+
+ip sla 6
+icmp-echo 2001:db8:acad:1000::1
+frequency 15
+exit
+
+ip sla schedule 4 life forever start-time now
+ip sla schedule 6 life forever start-time now
+
+do copy run start
+
