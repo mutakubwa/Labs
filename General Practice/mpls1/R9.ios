@@ -1,0 +1,264 @@
+en
+conf t
+
+host R9
+banner motd "MPLS lab - PE"
+
+ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input ssh telnet
+exit
+
+int e0/2
+ip address 10.10.6.1 255.255.255.252
+ipv6 address fe80::9:1 link-local
+ipv6 address 2001:db8:acad:106::1/64
+no shut
+exit
+
+int e0/3
+ip address 10.6.2.1 255.255.255.252
+ipv6 address fe80::9:2 link-local
+ipv6 address 2001:db8:acad:62::1/64
+no shut
+exit
+
+
+int e0/1
+ip address 10.6.1.1 255.255.255.252
+ipv6 address fe80::9:3 link-local
+ipv6 address 2001:db8:acad:61::1/64
+no shut
+exit
+
+router ospfv3 1
+!ospfv3 for both ipv4 and ipv6 address families
+router-id 9.9.9.9
+address-family ipv4 unicast
+exit
+address-family ipv6 unicast
+exit
+
+exit
+
+int e0/2
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+int e0/2
+mpls ip
+exit
+
+mpls label protocol ldp
+mpls label range 900 999
+
+int loopback 0
+ip address 9.9.9.9 255.255.255.255
+ipv6 address 2001:db8:acad:9::9/64
+no shut
+exit
+
+mpls ldp router-id loopback 0
+
+interface loopback 0
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+
+!setup vrfs for customer_A and customer_B
+vrf definition customer_A
+rd 64512:100
+
+address-family ipv4 unicast
+route-target import 64512:100
+route-target export 64512:100
+exit
+
+address-family ipv6 unicast
+route-target import 64512:100
+route-target export 64512:100
+exit
+
+exit
+
+vrf definition customer_B
+rd 64512:101
+
+address-family ipv4 unicast
+route-target import 64512:101
+route-target export 64512:101
+exit
+
+address-family ipv6 unicast
+route-target import 64512:101
+route-target export 64512:101
+exit
+
+exit
+
+int e0/3
+vrf forwarding customer_A
+exit
+
+int e0/1
+vrf forwarding customer_B
+exit
+
+
+!vrf config removes ip address so reconfigure all ip address
+int e0/3
+ip address 10.6.2.1 255.255.255.252
+ipv6 address fe80::9:2 link-local
+ipv6 address 2001:db8:acad:62::1/64
+no shut
+exit
+
+
+int e0/1
+ip address 10.6.1.1 255.255.255.252
+ipv6 address fe80::9:3 link-local
+ipv6 address 2001:db8:acad:61::1/64
+no shut
+exit
+
+
+!setup bgp for vpn label and routes exchange
+router bgp 64512
+no synchronization
+bgp log-neighbor-changes
+no auto-summary
+no bgp default ipv4-unicast
+
+neighbor 11.11.11.11 remote-as 64512
+neighbor 11.11.11.11 update-source loopback0
+neighbor 2001:db8:acad:11::11 remote-as 64512
+neighbor 2001:db8:acad:11::11 update-source loopback0
+
+address-family vpnv4
+neighbor 11.11.11.11 activate
+neighbor 11.11.11.11 send-community extended
+exit
+
+address-family vpnv6
+neighbor 2001:db8:acad:11::11 activate
+neighbor 2001:db8:acad:11::11 send-community extended
+exit
+
+address-family ipv4 unicast vrf customer_A
+redistribute eigrp 1
+exit
+
+address-family ipv6 unicast vrf customer_A
+redistribute eigrp 1
+exit
+
+address-family ipv4 unicast vrf customer_B
+redistribute eigrp 1
+exit
+
+address-family ipv6 unicast vrf customer_B
+redistribute eigrp 1
+exit
+
+
+exit
+
+
+
+!configure PE to CE routing 
+router eigrp named
+
+address-family ipv4 unicast vrf customer_A autonomous-system 1
+eigrp router-id 9.9.9.9
+network 10.6.2.0 0.0.0.255
+
+topology base
+redistribute bgp 64512 metric 1 1 255 1 1500
+no auto-summary
+exit
+ 
+af-interface default
+passive-interface 
+exit
+
+af-interface e0/3
+no passive-interface
+exit
+exit
+
+
+address-family ipv6 unicast vrf customer_A autonomous-system 1
+eigrp router-id 9.9.9.9
+
+topology base
+redistribute bgp 64512 metric 1 1 255 1 1500
+exit
+
+af-interface default
+passive-interface 
+exit
+
+af-interface e0/3
+no passive-interface
+exit
+exit
+
+address-family ipv4 unicast vrf customer_B autonomous-system 1
+eigrp router-id 9.9.9.9
+network 10.6.1.0 0.0.0.255
+
+topology base
+redistribute bgp 64512 metric 1 1 255 1 1500
+no auto-summary
+exit
+
+af-interface default
+passive-interface 
+exit
+
+af-interface e0/1
+no passive-interface
+exit
+
+exit
+
+address-family ipv6 unicast vrf customer_B autonomous-system 1
+eigrp router-id 9.9.9.9
+
+topology base
+redistribute bgp 64512 metric 1 1 255 1 1500
+exit
+
+af-interface default
+passive-interface 
+exit
+
+af-interface e0/1
+no passive-interface
+exit
+exit
+
+exit
+
+
+do copy run start
+
+
+
+
+
+
+

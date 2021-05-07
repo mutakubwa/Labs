@@ -1,0 +1,88 @@
+en
+conf t
+
+host R4
+banner motd "MPLS lab - P"
+
+ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input ssh telnet
+exit
+
+int e0/1
+ip address 10.10.3.1 255.255.255.252
+ipv6 address fe80::4:1 link-local
+ipv6 address 2001:db8:acad:103::1/64
+no shut
+exit
+
+int e0/0
+ip address 10.10.5.2 255.255.255.252
+ipv6 address fe80::4:2 link-local
+ipv6 address 2001:db8:acad:105::2/64
+no shut
+exit
+
+router ospfv3 1
+!ospfv3 for both ipv4 and ipv6 address families
+router-id 4.4.4.4
+address-family ipv4 unicast
+exit
+address-family ipv6 unicast
+exit
+
+exit
+
+int e0/0
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+int e0/1
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+int e0/0
+mpls ip
+exit
+
+int e0/1
+mpls ip
+exit
+
+mpls label protocol ldp
+mpls label range 400 499
+
+int loopback 0
+ip address 4.4.4.4 255.255.255.255
+ipv6 address 2001:db8:acad:4000::4/64
+no shut
+exit
+
+mpls ldp router-id loopback 0
+
+interface loopback 0
+ospfv3 1 ipv4 area 0
+ospfv3 1 ipv6 area 0
+exit
+
+
+do copy run start
+
+
+
+
+
+
