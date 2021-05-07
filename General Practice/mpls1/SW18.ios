@@ -1,0 +1,35 @@
+en
+conf t
+
+host SW18
+banner motd "MPLS lab - Switch L2"
+
+spanning-tree mode rapid-pvst
+
+no ip routing
+no ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input ssh telnet
+exit
+
+int range e0/0-3,e1/0-3,e2/0-3
+shut
+exit
+
+int e0/0
+no shut
+exit
+
+do copy run start
+

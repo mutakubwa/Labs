@@ -1,0 +1,69 @@
+en
+conf t
+
+host R14
+banner motd #MPLS lab - CE#
+
+ipv6 unicast-routing
+
+line con 0
+logging synchronous
+exec-timeout  0 0
+exit
+
+line vty 0 4
+logging synchronous
+exec-timeout  0 0
+privilege level 15
+password cisco123
+login
+transport input ssh telnet
+exit
+
+int e0/1
+ip address 10.6.1.2 255.255.255.252
+ipv6 address fe80::14:1 link-local
+ipv6 address 2001:db8:acad:61::2/64
+no shut
+exit
+
+int e0/0
+ip address 192.168.2.1 255.255.255.0
+ipv6 address fe80::14:2 link-local
+ipv6 address 2001:db8:acad:1682::1/64
+no shut
+exit
+
+router eigrp named
+no auto-summary
+
+address-family ipv4 unicast autonomous-system 1
+eigrp router-id 14.14.14.14
+network 10.6.1.0 0.0.0.255
+network 192.168.2.0 0.0.0.255
+
+af-interface default
+passive-interface
+exit
+
+af-interface e0/1
+no passive-interface
+exit
+exit
+
+address-family ipv6 unicast autonomous-system 1
+eigrp router-id 14.14.14.14
+
+af-interface default
+passive-interface
+exit
+
+af-interface e0/1
+no passive-interface
+exit
+exit
+
+exit
+
+do copy run start
+
